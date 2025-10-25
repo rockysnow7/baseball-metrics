@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "baseball-metrics"
+version = "0.1.0"
+description = "a python library for calculating metrics for mlb players"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "duckdb",
+]
+
+[project.urls]
+Homepage = "https://github.com/rockysnow7/baseball-metrics"
