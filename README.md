@@ -2,7 +2,7 @@
 
 this is a python library for calculating metrics for mlb players.
 
-## example
+## example
 
 ```python
 from baseball_metrics import Player
