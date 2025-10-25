@@ -1,4 +1,4 @@
-from utils import download_retrosheet_data
+from .utils import download_retrosheet_data
 
 import datetime
 import duckdb
