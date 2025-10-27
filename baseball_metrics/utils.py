@@ -6,6 +6,8 @@ import zipfile
 URL_TEMPLATE = "https://www.retrosheet.org/downloads/{year}/{year}csvs.zip"
 
 def download_retrosheet_data(year: int):
+    """Downloads the retrosheet data for the given year."""
+
     url = URL_TEMPLATE.format(year=year)
     os.makedirs(f"retrosheet/{year}", exist_ok=True)
     zip_path = f"retrosheet/{year}/{year}csvs.zip"
