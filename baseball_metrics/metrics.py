@@ -18,6 +18,7 @@ class Player:
         end_date: datetime.date,
         *,
         num_decimal_places: int = 3,
+        min_at_bats: int = 20,
     ) -> float | None:
         """Calculates the player's batting average across all their games between `start_date` and `end_date` (inclusive)."""
 
@@ -39,7 +40,7 @@ class Player:
 
         num_at_bats = conn.execute(f"SELECT COUNT(*) FROM {plays_table_name} WHERE batter = '{self.id}' AND ab = 1 AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'").fetchone()[0]
         num_hits = conn.execute(f"SELECT COUNT(*) FROM {plays_table_name} WHERE batter = '{self.id}' AND ab = 1 AND (single = 1 OR double = 1 OR triple = 1 OR hr = 1) AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'").fetchone()[0]
-        if num_at_bats == 0:
+        if num_at_bats < min_at_bats:
             return None
 
         avg = num_hits / num_at_bats
@@ -52,6 +53,7 @@ class Player:
         end_date: datetime.date,
         *,
         num_decimal_places: int = 3,
+        min_denominator: int = 20,
     ) -> float | None:
         """Calculates the player's on-base percentage across all their games between `start_date` and `end_date` (inclusive)."""
 
@@ -73,7 +75,7 @@ class Player:
 
         h_bb_hbp = conn.execute(f"SELECT COUNT(*) FROM {plays_table_name} WHERE batter = '{self.id}' AND (single = 1 OR double = 1 OR triple = 1 OR hr = 1 OR walk = 1 OR iw = 1 OR hbp = 1) AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'").fetchone()[0]
         ab_bb_hbp_sf = conn.execute(f"SELECT COUNT(*) FROM {plays_table_name} WHERE batter = '{self.id}' AND (ab = 1 OR walk = 1 OR iw = 1 OR hbp = 1 OR sf = 1) AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'").fetchone()[0]
-        if ab_bb_hbp_sf == 0:
+        if ab_bb_hbp_sf < min_denominator:
             return None
 
         obp = h_bb_hbp / ab_bb_hbp_sf
@@ -86,6 +88,7 @@ class Player:
         end_date: datetime.date,
         *,
         num_decimal_places: int = 3,
+        min_ip: int = 20,
     ) -> float | None:
         """Calculates the player's earned run average across all their games between `start_date` and `end_date` (inclusive)."""
 
@@ -121,6 +124,8 @@ class Player:
         """
         ip, runs_allowed = conn.execute(era_query).fetchone()
         if ip is None or runs_allowed is None:
+            return None
+        if ip < min_ip:
             return None
 
         era = (runs_allowed / ip) * 9
