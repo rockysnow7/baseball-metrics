@@ -1,3 +1,4 @@
+from enum import Enum
 from .utils import download_retrosheet_data
 
 import datetime
@@ -6,6 +7,12 @@ import os
 
 
 conn = duckdb.connect(":memory:")
+
+
+class Handedness(Enum):
+    LEFT = "L"
+    RIGHT = "R"
+    BOTH = "B"
 
 
 class Player:
@@ -131,3 +138,35 @@ class Player:
         era = (runs_allowed / ip) * 9
 
         return round(era, num_decimal_places)
+
+    def bat_hand(self, year: int) -> Handedness | None:
+        """Returns the player's batting hand."""
+
+        if not os.path.exists(f"retrosheet/{year}"):
+            download_retrosheet_data(year)
+
+        allplayers_table_name = f"allplayers{year}"
+        allplayers_table_exists = conn.execute(f"SELECT * FROM information_schema.tables WHERE table_name = '{allplayers_table_name}'").fetchall()
+        if not allplayers_table_exists:
+            conn.execute(f"CREATE TABLE {allplayers_table_name} AS SELECT * FROM 'retrosheet/{year}/{year}allplayers.csv'")
+
+        bat_hand = conn.execute(f"SELECT bat FROM {allplayers_table_name} WHERE id = '{self.id}'").fetchone()[0]
+        if bat_hand is None:
+            return None
+        return Handedness(bat_hand)
+
+    def throw_hand(self, year: int) -> Handedness | None:
+        """Returns the player's throwing hand."""
+
+        if not os.path.exists(f"retrosheet/{year}"):
+            download_retrosheet_data(year)
+
+        allplayers_table_name = f"allplayers{year}"
+        allplayers_table_exists = conn.execute(f"SELECT * FROM information_schema.tables WHERE table_name = '{allplayers_table_name}'").fetchall()
+        if not allplayers_table_exists:
+            conn.execute(f"CREATE TABLE {allplayers_table_name} AS SELECT * FROM 'retrosheet/{year}/{year}allplayers.csv'")
+
+        throw_hand = conn.execute(f"SELECT throw FROM {allplayers_table_name} WHERE id = '{self.id}'").fetchone()[0]
+        if throw_hand is None:
+            return None
+        return Handedness(throw_hand)
