@@ -416,6 +416,9 @@ class Player:
 
         slg = self.slg(start_date, end_date, num_decimal_places=num_decimal_places, min_at_bats=min_at_bats)
         avg = self.avg(start_date, end_date, num_decimal_places=num_decimal_places, min_at_bats=min_at_bats)
+        if slg is None or avg is None:
+            return None
+
         iso_ = slg - avg
 
         return round(iso_, num_decimal_places)
