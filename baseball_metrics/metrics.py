@@ -170,3 +170,298 @@ class Player:
         if throw_hand is None:
             return None
         return Handedness(throw_hand)
+
+    def k_pct_batting(
+        self,
+        start_date: datetime.date,
+        end_date: datetime.date,
+        *,
+        num_decimal_places: int = 3,
+        min_at_bats: int = 20,
+    ) -> float | None:
+        """Calculates the player's strikeout percentage across all their games as a batter between `start_date` and `end_date` (inclusive)."""
+
+        if start_date > end_date:
+            raise ValueError("start_date must be before end_date")
+        if start_date.year != end_date.year:
+            raise ValueError("start_date and end_date must be in the same year")
+
+        if not os.path.exists(f"retrosheet/{start_date.year}"):
+            download_retrosheet_data(start_date.year)
+
+        plays_table_name = f"plays{start_date.year}"
+        plays_table_exists = conn.execute(f"SELECT * FROM information_schema.tables WHERE table_name = '{plays_table_name}'").fetchall()
+        if not plays_table_exists:
+            conn.execute(f"CREATE TABLE {plays_table_name} AS SELECT * FROM 'retrosheet/{start_date.year}/{start_date.year}plays.csv'")
+
+        start_date_str = start_date.strftime("%Y/%m/%d")
+        end_date_str = end_date.strftime("%Y/%m/%d")
+
+        k_pct_query = f"""
+        SELECT
+            COUNT(*) AS at_bats,
+            SUM(k) AS k
+        FROM {plays_table_name}
+        WHERE
+            batter = '{self.id}'
+            AND ab = 1
+            AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'
+        """
+        at_bats, k = conn.execute(k_pct_query).fetchone()
+        if at_bats is None or k is None:
+            return None
+        if at_bats < min_at_bats:
+            return None
+
+        k_pct = k / at_bats
+
+        return round(k_pct, num_decimal_places)
+
+    def k_pct_pitching(
+        self,
+        start_date: datetime.date,
+        end_date: datetime.date,
+        *,
+        num_decimal_places: int = 3,
+        min_at_bats: int = 20,
+    ) -> float | None:
+        """Calculates the player's strikeout percentage across all their games as a pitcher between `start_date` and `end_date` (inclusive)."""
+
+        if start_date > end_date:
+            raise ValueError("start_date must be before end_date")
+        if start_date.year != end_date.year:
+            raise ValueError("start_date and end_date must be in the same year")
+
+        if not os.path.exists(f"retrosheet/{start_date.year}"):
+            download_retrosheet_data(start_date.year)
+
+        plays_table_name = f"plays{start_date.year}"
+        plays_table_exists = conn.execute(f"SELECT * FROM information_schema.tables WHERE table_name = '{plays_table_name}'").fetchall()
+        if not plays_table_exists:
+            conn.execute(f"CREATE TABLE {plays_table_name} AS SELECT * FROM 'retrosheet/{start_date.year}/{start_date.year}plays.csv'")
+
+        start_date_str = start_date.strftime("%Y/%m/%d")
+        end_date_str = end_date.strftime("%Y/%m/%d")
+
+        k_pct_query = f"""
+        SELECT
+            COUNT(*) AS at_bats,
+            SUM(k) AS k
+        FROM {plays_table_name}
+        WHERE
+            pitcher = '{self.id}'
+            AND ab = 1
+            AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'
+        """
+        at_bats, k = conn.execute(k_pct_query).fetchone()
+        if at_bats is None or k is None:
+            return None
+        if at_bats < min_at_bats:
+            return None
+
+        k_pct = k / at_bats
+
+        return round(k_pct, num_decimal_places)
+
+    def bb_pct_batting(
+        self,
+        start_date: datetime.date,
+        end_date: datetime.date,
+        *,
+        num_decimal_places: int = 3,
+        min_at_bats: int = 20,
+    ) -> float | None:
+        """Calculates the player's walk percentage across all their games as a batter between `start_date` and `end_date` (inclusive)."""
+
+        if start_date > end_date:
+            raise ValueError("start_date must be before end_date")
+        if start_date.year != end_date.year:
+            raise ValueError("start_date and end_date must be in the same year")
+
+        if not os.path.exists(f"retrosheet/{start_date.year}"):
+            download_retrosheet_data(start_date.year)
+
+        plays_table_name = f"plays{start_date.year}"
+        plays_table_exists = conn.execute(f"SELECT * FROM information_schema.tables WHERE table_name = '{plays_table_name}'").fetchall()
+        if not plays_table_exists:
+            conn.execute(f"CREATE TABLE {plays_table_name} AS SELECT * FROM 'retrosheet/{start_date.year}/{start_date.year}plays.csv'")
+
+        start_date_str = start_date.strftime("%Y/%m/%d")
+        end_date_str = end_date.strftime("%Y/%m/%d")
+
+        bb_pct_query = f"""
+        SELECT
+            COUNT(*) AS at_bats,
+            SUM(walk) AS walks
+        FROM {plays_table_name}
+        WHERE
+            batter = '{self.id}'
+            AND ab = 1
+            AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'
+        """
+        at_bats, walks = conn.execute(bb_pct_query).fetchone()
+        if at_bats is None or walks is None:
+            return None
+        if at_bats < min_at_bats:
+            return None
+
+        bb_pct = walks / at_bats
+
+        return round(bb_pct, num_decimal_places)
+
+    def bb_pct_pitching(
+        self,
+        start_date: datetime.date,
+        end_date: datetime.date,
+        *,
+        num_decimal_places: int = 3,
+        min_at_bats: int = 20,
+    ) -> float | None:
+        """Calculates the player's walk percentage across all their games as a pitcher between `start_date` and `end_date` (inclusive)."""
+
+        if start_date > end_date:
+            raise ValueError("start_date must be before end_date")
+        if start_date.year != end_date.year:
+            raise ValueError("start_date and end_date must be in the same year")
+
+        if not os.path.exists(f"retrosheet/{start_date.year}"):
+            download_retrosheet_data(start_date.year)
+
+        plays_table_name = f"plays{start_date.year}"
+        plays_table_exists = conn.execute(f"SELECT * FROM information_schema.tables WHERE table_name = '{plays_table_name}'").fetchall()
+        if not plays_table_exists:
+            conn.execute(f"CREATE TABLE {plays_table_name} AS SELECT * FROM 'retrosheet/{start_date.year}/{start_date.year}plays.csv'")
+
+        start_date_str = start_date.strftime("%Y/%m/%d")
+        end_date_str = end_date.strftime("%Y/%m/%d")
+
+        bb_pct_query = f"""
+        SELECT
+            COUNT(*) AS at_bats,
+            SUM(walk) AS walks
+        FROM {plays_table_name}
+        WHERE
+            pitcher = '{self.id}'
+            AND ab = 1
+            AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'
+        """
+        at_bats, walks = conn.execute(bb_pct_query).fetchone()
+        if at_bats is None or walks is None:
+            return None
+        if at_bats < min_at_bats:
+            return None
+
+        bb_pct = walks / at_bats
+
+        return round(bb_pct, num_decimal_places)
+
+    def slg(
+        self,
+        start_date: datetime.date,
+        end_date: datetime.date,
+        *,
+        num_decimal_places: int = 3,
+        min_at_bats: int = 20,
+    ) -> float | None:
+        """Calculates the player's slugging percentage across all their games between `start_date` and `end_date` (inclusive)."""
+
+        if start_date > end_date:
+            raise ValueError("start_date must be before end_date")
+        if start_date.year != end_date.year:
+            raise ValueError("start_date and end_date must be in the same year")
+
+        if not os.path.exists(f"retrosheet/{start_date.year}"):
+            download_retrosheet_data(start_date.year)
+
+        plays_table_name = f"plays{start_date.year}"
+        plays_table_exists = conn.execute(f"SELECT * FROM information_schema.tables WHERE table_name = '{plays_table_name}'").fetchall()
+        if not plays_table_exists:
+            conn.execute(f"CREATE TABLE {plays_table_name} AS SELECT * FROM 'retrosheet/{start_date.year}/{start_date.year}plays.csv'")
+
+        start_date_str = start_date.strftime("%Y/%m/%d")
+        end_date_str = end_date.strftime("%Y/%m/%d")
+
+        slg_query = f"""
+        SELECT
+            COUNT(*) AS at_bats,
+            SUM(single) AS singles,
+            SUM(double) AS doubles,
+            SUM(triple) AS triples,
+            SUM(hr) AS home_runs
+        FROM {plays_table_name}
+        WHERE
+            batter = '{self.id}'
+            AND ab = 1
+            AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'
+        """
+        at_bats, singles, doubles, triples, home_runs = conn.execute(slg_query).fetchone()
+        if at_bats is None or singles is None or doubles is None or triples is None or home_runs is None:
+            return None
+        if at_bats < min_at_bats:
+            return None
+
+        slg = (singles + doubles * 2 + triples * 3 + home_runs * 4) / at_bats
+
+        return round(slg, num_decimal_places)
+
+    def iso(
+        self,
+        start_date: datetime.date,
+        end_date: datetime.date,
+        *,
+        num_decimal_places: int = 3,
+        min_at_bats: int = 20,
+    ) -> float | None:
+        """Calculates the player's isolated power across all their games between `start_date` and `end_date` (inclusive)."""
+
+        slg = self.slg(start_date, end_date, num_decimal_places=num_decimal_places, min_at_bats=min_at_bats)
+        avg = self.avg(start_date, end_date, num_decimal_places=num_decimal_places, min_at_bats=min_at_bats)
+        iso_ = slg - avg
+
+        return round(iso_, num_decimal_places)
+
+    def gb_pct_pitching(
+        self,
+        start_date: datetime.date,
+        end_date: datetime.date,
+        *,
+        num_decimal_places: int = 3,
+        min_at_bats: int = 20,
+    ) -> float | None:
+        """Calculates the player's ground ball percentage across all their games as a pitcher between `start_date` and `end_date` (inclusive)."""
+
+        if start_date > end_date:
+            raise ValueError("start_date must be before end_date")
+        if start_date.year != end_date.year:
+            raise ValueError("start_date and end_date must be in the same year")
+
+        if not os.path.exists(f"retrosheet/{start_date.year}"):
+            download_retrosheet_data(start_date.year)
+
+        plays_table_name = f"plays{start_date.year}"
+        plays_table_exists = conn.execute(f"SELECT * FROM information_schema.tables WHERE table_name = '{plays_table_name}'").fetchall()
+        if not plays_table_exists:
+            conn.execute(f"CREATE TABLE {plays_table_name} AS SELECT * FROM 'retrosheet/{start_date.year}/{start_date.year}plays.csv'")
+
+        start_date_str = start_date.strftime("%Y/%m/%d")
+        end_date_str = end_date.strftime("%Y/%m/%d")
+
+        gb_pct_query = f"""
+        SELECT
+            COUNT(*) AS at_bats,
+            SUM(ground) as ground_balls
+        FROM {plays_table_name}
+        WHERE
+            pitcher = '{self.id}'
+            AND ab = 1
+            AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'
+        """
+        at_bats, ground_balls = conn.execute(gb_pct_query).fetchone()
+        if at_bats is None or ground_balls is None:
+            return None
+        if at_bats < min_at_bats:
+            return None
+
+        gb_pct = ground_balls / at_bats
+
+        return round(gb_pct, num_decimal_places)

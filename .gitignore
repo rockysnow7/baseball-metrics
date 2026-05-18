@@ -1,3 +1,4 @@
 retrosheet/
 __pycache__/
 .venv/
+main.py
