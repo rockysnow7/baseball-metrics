@@ -1,5 +1,6 @@
+from collections import OrderedDict
 from enum import Enum
-from functools import lru_cache
+from functools import wraps
 from .utils import download_retrosheet_data
 
 import datetime
@@ -17,10 +18,34 @@ class Handedness(Enum):
 
 
 class Player:
+    _cache: OrderedDict[tuple[str, str, datetime.date, datetime.date], float | None] = OrderedDict()
+    _cache_max_size: int = 1000
+
+    @staticmethod
+    def _cached(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            key = (self.id, func.__name__, args, tuple(sorted(kwargs.items())))
+            cache = Player._cache
+
+            if key in cache:
+                cache.move_to_end(key)
+                return cache[key]
+
+            result = func(self, *args, **kwargs)
+            cache[key] = result
+            cache.move_to_end(key)
+
+            if len(cache) > Player._cache_max_size:
+                cache.popitem(last=False)
+
+            return result
+        return wrapper
+
     def __init__(self, id: str) -> None:
         self.id = id
 
-    @lru_cache(maxsize=1000)
+    @_cached
     def avg(
         self,
         start_date: datetime.date,
@@ -56,7 +81,7 @@ class Player:
 
         return round(avg, num_decimal_places)
 
-    @lru_cache(maxsize=1000)
+    @_cached
     def obp(
         self,
         start_date: datetime.date,
@@ -92,7 +117,7 @@ class Player:
 
         return round(obp, num_decimal_places)
 
-    @lru_cache(maxsize=1000)
+    @_cached
     def era(
         self,
         start_date: datetime.date,
@@ -143,7 +168,7 @@ class Player:
 
         return round(era, num_decimal_places)
 
-    @lru_cache(maxsize=1000)
+    @_cached
     def bat_hand(self, year: int) -> Handedness | None:
         """Returns the player's batting hand."""
 
@@ -160,7 +185,7 @@ class Player:
             return None
         return Handedness(bat_hand)
 
-    @lru_cache(maxsize=1000)
+    @_cached
     def throw_hand(self, year: int) -> Handedness | None:
         """Returns the player's throwing hand."""
 
@@ -177,7 +202,7 @@ class Player:
             return None
         return Handedness(throw_hand)
 
-    @lru_cache(maxsize=1000)
+    @_cached
     def k_pct_batting(
         self,
         start_date: datetime.date,
@@ -224,7 +249,7 @@ class Player:
 
         return round(k_pct, num_decimal_places)
 
-    @lru_cache(maxsize=1000)
+    @_cached
     def k_pct_pitching(
         self,
         start_date: datetime.date,
@@ -271,7 +296,7 @@ class Player:
 
         return round(k_pct, num_decimal_places)
 
-    @lru_cache(maxsize=1000)
+    @_cached
     def bb_pct_batting(
         self,
         start_date: datetime.date,
@@ -318,7 +343,7 @@ class Player:
 
         return round(bb_pct, num_decimal_places)
 
-    @lru_cache(maxsize=1000)
+    @_cached
     def bb_pct_pitching(
         self,
         start_date: datetime.date,
@@ -365,7 +390,7 @@ class Player:
 
         return round(bb_pct, num_decimal_places)
 
-    @lru_cache(maxsize=1000)
+    @_cached
     def slg(
         self,
         start_date: datetime.date,
@@ -415,7 +440,7 @@ class Player:
 
         return round(slg, num_decimal_places)
 
-    @lru_cache(maxsize=1000)
+    @_cached
     def iso(
         self,
         start_date: datetime.date,
@@ -435,7 +460,7 @@ class Player:
 
         return round(iso_, num_decimal_places)
 
-    @lru_cache(maxsize=1000)
+    @_cached
     def gb_pct_pitching(
         self,
         start_date: datetime.date,
