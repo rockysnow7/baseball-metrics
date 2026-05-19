@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import lru_cache
 from .utils import download_retrosheet_data
 
 import datetime
@@ -19,6 +20,7 @@ class Player:
     def __init__(self, id: str) -> None:
         self.id = id
 
+    @lru_cache(maxsize=1000)
     def avg(
         self,
         start_date: datetime.date,
@@ -54,6 +56,7 @@ class Player:
 
         return round(avg, num_decimal_places)
 
+    @lru_cache(maxsize=1000)
     def obp(
         self,
         start_date: datetime.date,
@@ -89,6 +92,7 @@ class Player:
 
         return round(obp, num_decimal_places)
 
+    @lru_cache(maxsize=1000)
     def era(
         self,
         start_date: datetime.date,
@@ -139,6 +143,7 @@ class Player:
 
         return round(era, num_decimal_places)
 
+    @lru_cache(maxsize=1000)
     def bat_hand(self, year: int) -> Handedness | None:
         """Returns the player's batting hand."""
 
@@ -155,6 +160,7 @@ class Player:
             return None
         return Handedness(bat_hand)
 
+    @lru_cache(maxsize=1000)
     def throw_hand(self, year: int) -> Handedness | None:
         """Returns the player's throwing hand."""
 
@@ -171,6 +177,7 @@ class Player:
             return None
         return Handedness(throw_hand)
 
+    @lru_cache(maxsize=1000)
     def k_pct_batting(
         self,
         start_date: datetime.date,
@@ -217,6 +224,7 @@ class Player:
 
         return round(k_pct, num_decimal_places)
 
+    @lru_cache(maxsize=1000)
     def k_pct_pitching(
         self,
         start_date: datetime.date,
@@ -263,6 +271,7 @@ class Player:
 
         return round(k_pct, num_decimal_places)
 
+    @lru_cache(maxsize=1000)
     def bb_pct_batting(
         self,
         start_date: datetime.date,
@@ -309,6 +318,7 @@ class Player:
 
         return round(bb_pct, num_decimal_places)
 
+    @lru_cache(maxsize=1000)
     def bb_pct_pitching(
         self,
         start_date: datetime.date,
@@ -355,6 +365,7 @@ class Player:
 
         return round(bb_pct, num_decimal_places)
 
+    @lru_cache(maxsize=1000)
     def slg(
         self,
         start_date: datetime.date,
@@ -404,6 +415,7 @@ class Player:
 
         return round(slg, num_decimal_places)
 
+    @lru_cache(maxsize=1000)
     def iso(
         self,
         start_date: datetime.date,
@@ -423,6 +435,7 @@ class Player:
 
         return round(iso_, num_decimal_places)
 
+    @lru_cache(maxsize=1000)
     def gb_pct_pitching(
         self,
         start_date: datetime.date,
