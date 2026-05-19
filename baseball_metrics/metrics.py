@@ -80,8 +80,8 @@ class Player:
         start_date_str = start_date.strftime("%Y/%m/%d")
         end_date_str = end_date.strftime("%Y/%m/%d")
 
-        h_bb_hbp = conn.execute(f"SELECT COUNT(*) FROM {plays_table_name} WHERE batter = '{self.id}' AND (single = 1 OR double = 1 OR triple = 1 OR hr = 1 OR walk = 1 OR iw = 1 OR hbp = 1) AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'").fetchone()[0]
-        ab_bb_hbp_sf = conn.execute(f"SELECT COUNT(*) FROM {plays_table_name} WHERE batter = '{self.id}' AND (ab = 1 OR walk = 1 OR iw = 1 OR hbp = 1 OR sf = 1) AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'").fetchone()[0]
+        h_bb_hbp = conn.execute(f"SELECT COUNT(*) FROM {plays_table_name} WHERE batter = '{self.id}' AND (single = 1 OR double = 1 OR triple = 1 OR hr = 1 OR walk = 1 OR hbp = 1) AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'").fetchone()[0]
+        ab_bb_hbp_sf = conn.execute(f"SELECT COUNT(*) FROM {plays_table_name} WHERE batter = '{self.id}' AND (ab = 1 OR walk = 1 OR hbp = 1 OR sf = 1) AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'").fetchone()[0]
         if ab_bb_hbp_sf < min_denominator:
             return None
 
@@ -177,7 +177,7 @@ class Player:
         end_date: datetime.date,
         *,
         num_decimal_places: int = 3,
-        min_at_bats: int = 20,
+        min_plate_appearances: int = 20,
     ) -> float | None:
         """Calculates the player's strikeout percentage across all their games as a batter between `start_date` and `end_date` (inclusive)."""
 
@@ -199,21 +199,21 @@ class Player:
 
         k_pct_query = f"""
         SELECT
-            COUNT(*) AS at_bats,
+            COUNT(*) AS plate_appearances,
             SUM(k) AS k
         FROM {plays_table_name}
         WHERE
             batter = '{self.id}'
-            AND ab = 1
+            AND pa = 1
             AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'
         """
-        at_bats, k = conn.execute(k_pct_query).fetchone()
-        if at_bats is None or k is None:
+        plate_appearances, k = conn.execute(k_pct_query).fetchone()
+        if plate_appearances is None or k is None:
             return None
-        if at_bats < min_at_bats:
+        if plate_appearances < min_plate_appearances:
             return None
 
-        k_pct = k / at_bats
+        k_pct = k / plate_appearances
 
         return round(k_pct, num_decimal_places)
 
@@ -223,7 +223,7 @@ class Player:
         end_date: datetime.date,
         *,
         num_decimal_places: int = 3,
-        min_at_bats: int = 20,
+        min_plate_appearances: int = 20,
     ) -> float | None:
         """Calculates the player's strikeout percentage across all their games as a pitcher between `start_date` and `end_date` (inclusive)."""
 
@@ -245,21 +245,21 @@ class Player:
 
         k_pct_query = f"""
         SELECT
-            COUNT(*) AS at_bats,
+            COUNT(*) AS plate_appearances,
             SUM(k) AS k
         FROM {plays_table_name}
         WHERE
             pitcher = '{self.id}'
-            AND ab = 1
+            AND pa = 1
             AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'
         """
-        at_bats, k = conn.execute(k_pct_query).fetchone()
-        if at_bats is None or k is None:
+        plate_appearances, k = conn.execute(k_pct_query).fetchone()
+        if plate_appearances is None or k is None:
             return None
-        if at_bats < min_at_bats:
+        if plate_appearances < min_plate_appearances:
             return None
 
-        k_pct = k / at_bats
+        k_pct = k / plate_appearances
 
         return round(k_pct, num_decimal_places)
 
@@ -269,7 +269,7 @@ class Player:
         end_date: datetime.date,
         *,
         num_decimal_places: int = 3,
-        min_at_bats: int = 20,
+        min_plate_appearances: int = 20,
     ) -> float | None:
         """Calculates the player's walk percentage across all their games as a batter between `start_date` and `end_date` (inclusive)."""
 
@@ -291,21 +291,21 @@ class Player:
 
         bb_pct_query = f"""
         SELECT
-            COUNT(*) AS at_bats,
+            COUNT(*) AS plate_appearances,
             SUM(walk) AS walks
         FROM {plays_table_name}
         WHERE
             batter = '{self.id}'
-            AND ab = 1
+            AND pa = 1
             AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'
         """
-        at_bats, walks = conn.execute(bb_pct_query).fetchone()
-        if at_bats is None or walks is None:
+        plate_appearances, walks = conn.execute(bb_pct_query).fetchone()
+        if plate_appearances is None or walks is None:
             return None
-        if at_bats < min_at_bats:
+        if plate_appearances < min_plate_appearances:
             return None
 
-        bb_pct = walks / at_bats
+        bb_pct = walks / plate_appearances
 
         return round(bb_pct, num_decimal_places)
 
@@ -315,7 +315,7 @@ class Player:
         end_date: datetime.date,
         *,
         num_decimal_places: int = 3,
-        min_at_bats: int = 20,
+        min_plate_appearances: int = 20,
     ) -> float | None:
         """Calculates the player's walk percentage across all their games as a pitcher between `start_date` and `end_date` (inclusive)."""
 
@@ -337,21 +337,21 @@ class Player:
 
         bb_pct_query = f"""
         SELECT
-            COUNT(*) AS at_bats,
+            COUNT(*) AS plate_appearances,
             SUM(walk) AS walks
         FROM {plays_table_name}
         WHERE
             pitcher = '{self.id}'
-            AND ab = 1
+            AND pa = 1
             AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'
         """
-        at_bats, walks = conn.execute(bb_pct_query).fetchone()
-        if at_bats is None or walks is None:
+        plate_appearances, walks = conn.execute(bb_pct_query).fetchone()
+        if plate_appearances is None or walks is None:
             return None
-        if at_bats < min_at_bats:
+        if plate_appearances < min_plate_appearances:
             return None
 
-        bb_pct = walks / at_bats
+        bb_pct = walks / plate_appearances
 
         return round(bb_pct, num_decimal_places)
 
@@ -414,8 +414,8 @@ class Player:
     ) -> float | None:
         """Calculates the player's isolated power across all their games between `start_date` and `end_date` (inclusive)."""
 
-        slg = self.slg(start_date, end_date, num_decimal_places=num_decimal_places, min_at_bats=min_at_bats)
-        avg = self.avg(start_date, end_date, num_decimal_places=num_decimal_places, min_at_bats=min_at_bats)
+        slg = self.slg(start_date, end_date, num_decimal_places=num_decimal_places + 2, min_at_bats=min_at_bats)
+        avg = self.avg(start_date, end_date, num_decimal_places=num_decimal_places + 2, min_at_bats=min_at_bats)
         if slg is None or avg is None:
             return None
 
@@ -431,7 +431,7 @@ class Player:
         num_decimal_places: int = 3,
         min_at_bats: int = 20,
     ) -> float | None:
-        """Calculates the player's ground ball percentage across all their games as a pitcher between `start_date` and `end_date` (inclusive)."""
+        """Calculates the player's ground ball percentage (ground balls / balls in play) across all their games as a pitcher between `start_date` and `end_date` (inclusive)."""
 
         if start_date > end_date:
             raise ValueError("start_date must be before end_date")
@@ -451,20 +451,20 @@ class Player:
 
         gb_pct_query = f"""
         SELECT
-            COUNT(*) AS at_bats,
-            SUM(ground) as ground_balls
+            COUNT(*) AS balls_in_play,
+            SUM(ground) AS ground_balls
         FROM {plays_table_name}
         WHERE
             pitcher = '{self.id}'
-            AND ab = 1
+            AND bip = 1
             AND strptime(CAST(date AS VARCHAR), '%Y%m%d') BETWEEN DATE '{start_date_str}' AND DATE '{end_date_str}'
         """
-        at_bats, ground_balls = conn.execute(gb_pct_query).fetchone()
-        if at_bats is None or ground_balls is None:
+        balls_in_play, ground_balls = conn.execute(gb_pct_query).fetchone()
+        if balls_in_play is None or ground_balls is None:
             return None
-        if at_bats < min_at_bats:
+        if balls_in_play < min_at_bats:
             return None
 
-        gb_pct = ground_balls / at_bats
+        gb_pct = ground_balls / balls_in_play
 
         return round(gb_pct, num_decimal_places)
